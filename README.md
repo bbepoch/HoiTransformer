@@ -12,13 +12,12 @@ We recomend you to setup in the following steps:
 
 1.Clone the repo.
 ```
-git clone git@github.com:bbepoch/HoiTransformer.git
+git clone https://github.com/bbepoch/HoiTransformer.git
 ```
 
 2.Download the MS-COCO pretrained [DETR](https://github.com/facebookresearch/detr) model.
 ```bash
 cd data/detr_coco && bash download_model.sh
-
 ```
 
 3.You are supposed to make a soft link named 'images' in 'data/hico/' to refer to your [HICO-DET](https://drive.google.com/open?id=1QZcJmGVlF9f4h-XLWe9Gkmnmj2z1gSnk) path, or your will have to modify the data path manually in [hico.py](datasets/hico.py).
