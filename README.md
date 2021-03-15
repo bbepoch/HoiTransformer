@@ -39,10 +39,10 @@ python3 test.py --dataset_file=hico --batch_size=1 --log_dir=./ --backbone=resne
 ## Citation
 ```
 @inproceedings{zou2021_hoitrans,
-author = {Zou, Cheng and Wang, Bohan and Hu, Yue and Liu, Junqi and Wu, Qian and Zhao, Yu and Li, Boxun and Zhang, Chenguang and Zhang, Chi and Wei, Yichen and Sun, Jian},
-title = {End-to-End Human Object Interaction Detection with HOI Transformer},
-booktitle={CVPR},
-year = {2021},
+  author = {Zou, Cheng and Wang, Bohan and Hu, Yue and Liu, Junqi and Wu, Qian and Zhao, Yu and Li, Boxun and Zhang, Chenguang and Zhang, Chi and Wei, Yichen and Sun, Jian},
+  title = {End-to-End Human Object Interaction Detection with HOI Transformer},
+  booktitle={CVPR},
+  year = {2021},
 }
 ```
 
