@@ -30,19 +30,24 @@ ln -s /path-to-your-hico-det-dataset/hico_20160224_det/images images
 python3 -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --epochs=250 --lr_drop=200 --dataset_file=hico --batch_size=2 --backbone=resnet50
 ```
 
-5.Test a model.
+5.Prepare evaluation tool.
 ```
-python3 test.py --dataset_file=hico --batch_size=1 --log_dir=./ --model_path=your_model_path
+cd data/hico && unzip eval.zip
+```
+
+6.Test a [model](https://drive.google.com/drive/folders/1RY_4rrUuFzlTfFp5IVTNauB0-Sd0fphW?usp=sharing).
+```
+python3 test.py --dataset_file=hico --batch_size=1 --log_dir=./ --backbone=resnet50 --model_path=your_model_path
 ```
 
 
 ## Citation
 ```
 @inproceedings{zou2021_hoitrans,
-author = {Zou, Cheng and Wang, Bohan and Hu, Yue and Liu, Junqi and Wu, Qian and Zhao, Yu and Li, Boxun and Zhang, Chenguang and Zhang, Chi and Wei, Yichen and Sun, Jian},
-title = {End-to-End Human Object Interaction Detection with HOI Transformer},
-booktitle={CVPR},
-year = {2021},
+  author = {Zou, Cheng and Wang, Bohan and Hu, Yue and Liu, Junqi and Wu, Qian and Zhao, Yu and Li, Boxun and Zhang, Chenguang and Zhang, Chi and Wei, Yichen and Sun, Jian},
+  title = {End-to-End Human Object Interaction Detection with HOI Transformer},
+  booktitle={CVPR},
+  year = {2021},
 }
 ```
 

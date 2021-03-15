@@ -1,6 +1,6 @@
 """
-    evaluation for odgt format.
-    wagnbohan 2020-10-30
+    Evaluation for odgt format.
+    Bohan Wang 2020-10-30
 """
 
 import json
@@ -8,17 +8,18 @@ import numpy as np
 import logging
 from tqdm import tqdm
 
+
 class hico():
     """
         output:
             object category id: coco[1, 90]
-            verb vategory id: hico[1, 117]
+            verb category id: hico[1, 117]
     """
-
     def __init__(self, annotation_file):
         self.annotations = json.load(open(annotation_file, 'r'))
         self.train_annotations = json.load(open(annotation_file.replace('test_hico.json', 'trainval_hico.json'), 'r'))
         self.overlap_iou = 0.5
+
         # add explation name for verb_name_dict
         self.verb_name_dict = []
         self.verb_name_dict_name = []
@@ -284,6 +285,7 @@ class hico():
             rec[3] += 1
         return prediction
 
+
 # 80
 coco_object_name = [
     'person', 'bicycle', 'car', 'motorcycle', 'airplane',
@@ -300,6 +302,7 @@ coco_object_name = [
     'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase',
     'scissors', 'teddy bear', 'hair drier', 'toothbrush'
 ]
+
 coco_object_valid_ids = [
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13,
     14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
@@ -309,6 +312,7 @@ coco_object_valid_ids = [
     58, 59, 60, 61, 62, 63, 64, 65, 67, 70,
     72, 73, 74, 75, 76, 77, 78, 79, 80, 81,
     82, 84, 85, 86, 87, 88, 89, 90]
+
 # trans[1, 90] to [0, 80]
 coco_object_inverse_ids = {idx: i for i, idx in enumerate(coco_object_valid_ids)}
 
@@ -329,10 +333,11 @@ hico_action_name = [
     'swing', 'tag', 'talk_on', 'teach', 'text_on', 'throw', 'tie', 'toast', 'train',
     'turn', 'type_on', 'walk', 'wash', 'watch', 'wave', 'wear', 'wield', 'zip',
 ]
+
 hico_name2id = {name: i + 1 for i, name in enumerate(hico_action_name)}
+
 # trans[1, 117] to [0, 116]
 hico_action_inverse_ids = {i: i - 1 for i in range(1, 118)}
-
 
 # [1, 90]
 coco_classes_originID = {
@@ -419,7 +424,6 @@ coco_classes_originID = {
 }
 
 
-
 def get_hoi_output(Image_dets, corre_mat=None, nid2name=None):
     # 如果Object不满足 就要乘上0 纯评测
     output_hoi = []
@@ -464,9 +468,10 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--output_file", type=str)
-    parser.add_argument("--eval_path", default="/data/DATA/HICO/eval")
+    parser.add_argument("--eval_path", default="./data/hico/eval")
 
     args = parser.parse_args()
+
     # 1. transform hoi output
     with open(args.output_file, "r") as f:
         det = f.readlines()
@@ -482,4 +487,3 @@ if __name__ == "__main__":
     # 2. evaluation
     hoi_eval = hico(os.path.join(args.eval_path, 'test_hico.json'))
     map = hoi_eval.evalution(output_hoi, save_mAP=None)
-
