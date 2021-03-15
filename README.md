@@ -30,9 +30,9 @@ ln -s /path-to-your-hico-det-dataset/hico_20160224_det/images images
 python3 -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --epochs=250 --lr_drop=200 --dataset_file=hico --batch_size=2 --backbone=resnet50
 ```
 
-5.Test a model.
+5.Test a [model](https://drive.google.com/drive/folders/1RY_4rrUuFzlTfFp5IVTNauB0-Sd0fphW?usp=sharing).
 ```
-python3 test.py --dataset_file=hico --batch_size=1 --log_dir=./ --model_path=your_model_path
+python3 test.py --dataset_file=hico --batch_size=1 --log_dir=./ --backbone=resnet50 --model_path=your_model_path
 ```
 
 

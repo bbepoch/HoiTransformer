@@ -464,7 +464,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--output_file", type=str)
-    parser.add_argument("--eval_path", default="/data/DATA/HICO/eval")
+    parser.add_argument("--eval_path", default="./data/hico/eval")
 
     args = parser.parse_args()
     # 1. transform hoi output
