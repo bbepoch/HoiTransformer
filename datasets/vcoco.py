@@ -11,12 +11,15 @@ import torch
 import numpy as np
 import json
 import cv2
+import nori2 as nori
 import random
 import PIL
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 from util.box_ops import box_xyxy_to_cxcywh
 from PIL import Image
+
+fetcher = nori.Fetcher()
 
 
 coco_classes_originID = {
@@ -188,7 +191,7 @@ coco_instance_ID_to_name = {
 
 
 hoi_interaction_names = json.loads(
-    open('./data/hico/hico_verb_names.json', 'r').readlines()[0])['verb_names']
+    open('/data/DATA/VCOCO/vcoco_verb_names.json', 'r').readlines()[0])['verb_names']
 
 
 def convert_xywh2x1y1x2y2(box, shape, flip):
@@ -264,6 +267,19 @@ def get_hoi_annotation_from_odgt(item, total_boxes, scale):
         hoi_id = hoi_interaction_names.index(hoi['interaction'])
         hoi_box = get_interaction_box(human_box=human_box, object_box=object_box, hoi_id=hoi_id)
 
+        # # xyxy to cxcywh
+        # human_box = xyxy_to_cxcywh(human_box)
+        # object_box = xyxy_to_cxcywh(object_box)
+        # hoi_box = xyxy_to_cxcywh(hoi_box)
+        #
+        # # norm to 0-1
+        # human_box = human_box[0] / img_ww, human_box[1] / img_hh, \
+        #     human_box[2] / img_ww, human_box[3] / img_hh, human_box[4]
+        # object_box = object_box[0] / img_ww, object_box[1] / img_hh, \
+        #     object_box[2] / img_ww, object_box[3] / img_hh, object_box[4]
+        # hoi_box = hoi_box[0] / img_ww, hoi_box[1] / img_hh, \
+        #     hoi_box[2] / img_ww, hoi_box[3] / img_hh, hoi_box[4]
+
         human_boxes.append(human_box[0:4])
         object_boxes.append(object_box[0:4])
         action_boxes.append(hoi_box[0:4])
@@ -284,7 +300,7 @@ def get_hoi_annotation_from_odgt(item, total_boxes, scale):
 
 def parse_one_gt_line(gt_line, scale=1):
     item = json.loads(gt_line)
-    img_name = item['hico_image_name']
+    img_name = item['file_name']
     img_shape = item['height'], item['width']
     gt_boxes, ignored_boxes, total_boxes = get_det_annotation_from_odgt(item, img_shape, flip=0)
     interaction_boxes = get_hoi_annotation_from_odgt(item, total_boxes, scale)
@@ -537,10 +553,6 @@ def make_hico_transforms(image_set, test_scale=-1):
 
 
 class HoiDetection(VisionDataset):
-    """
-        You are supposed to make a soft link named 'images' in 'data/hico/' to refer to your HICO-DET images' path.
-        E.g. ln -s /path-to-your-hico-det-dataset/hico_20160224_det/images images
-    """
     def __init__(self, root, annFile, transform=None, target_transform=None, transforms=None):
         super(HoiDetection, self).__init__(root, transforms, transform, target_transform)
         self.annotations = [parse_one_gt_line(l.strip()) for l in open(annFile, 'r').readlines()]
@@ -550,10 +562,10 @@ class HoiDetection(VisionDataset):
         ann = self.annotations[index]
         img_name = ann['image_id']
         target = ann['annotations']
-        if 'train2015' in img_name:
-            img_path = './data/hico/images/train2015/%s' % img_name
-        elif 'test2015' in img_name:
-            img_path = './data/hico/images/test2015/%s' % img_name
+        if 'train2014' in img_name:
+            img_path = './data/vcoco/images/train2014/%s' % img_name
+        elif 'val2014' in img_name:
+            img_path = './data/vcoco/images/val2014/%s' % img_name
         else:  # For single image visualization.
             img_path = img_name
             raise NotImplementedError()
@@ -570,10 +582,9 @@ class HoiDetection(VisionDataset):
 def build(image_set, test_scale=-1):
     assert image_set in ['train', 'test'], image_set
     if image_set == 'train':
-        annotation_file = './data/hico/hico_trainval_retag_hoitr.odgt'
+        annotation_file = './data/vcoco/vcoco_trainval_retag_hoitr.odgt'
     else:
-        annotation_file = './data/hico/hico_test_retag_hoitr.odgt'
-
-    dataset = HoiDetection(root='./data/hico', annFile=annotation_file,
+        annotation_file = './data/vcoco/vcoco_test_retag_hoitr.odgt'
+    dataset = HoiDetection(root='./data/vcoco', annFile=annotation_file,
                            transforms=make_hico_transforms(image_set, test_scale))
     return dataset
