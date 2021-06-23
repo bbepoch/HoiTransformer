@@ -23,12 +23,11 @@ from .transformer import build_transformer
 
 
 num_humans = 2
-num_actions = 118
 
 
 class HoiTR(nn.Module):
     """ This is the DETR module that performs object detection """
-    def __init__(self, backbone, transformer, num_classes, num_queries, aux_loss=False):
+    def __init__(self, backbone, transformer, num_classes, num_actions, num_queries, aux_loss=False):
         """ Initializes the model.
         Parameters:
             backbone: torch module of the backbone to be used. See backbone.py
@@ -139,7 +138,7 @@ class SetCriterion(nn.Module):
         1) we compute hungarian assignment between ground truth boxes and the outputs of the model
         2) we supervise each pair of matched ground-truth / prediction (supervise class and box)
     """
-    def __init__(self, num_classes, matcher, weight_dict, eos_coef, losses):
+    def __init__(self, num_classes, num_actions, matcher, weight_dict, eos_coef, losses):
         """ Create the criterion.
         Parameters:
             num_classes: number of object categories, omitting the special no-object category
@@ -150,6 +149,7 @@ class SetCriterion(nn.Module):
         """
         super().__init__()
         self.num_classes = num_classes  # 91
+        self.num_actions = num_actions
         self.matcher = matcher
         self.weight_dict = weight_dict
         self.eos_coef = eos_coef
@@ -192,7 +192,7 @@ class SetCriterion(nn.Module):
                                            dtype=torch.int64, device=object_src_logits.device)
         object_target_classes[idx] = object_target_classes_o
 
-        action_target_classes = torch.full(action_src_logits.shape[:2], num_actions,
+        action_target_classes = torch.full(action_src_logits.shape[:2], self.num_actions,
                                            dtype=torch.int64, device=action_src_logits.device)
         action_target_classes[idx] = action_target_classes_o
 
@@ -341,8 +341,16 @@ class MLP(nn.Module):
 
 
 def build(args):
-    assert args.dataset_file in ['hico', 'vcoco'], args.dataset_file
-    num_classes = 91
+    assert args.dataset_file in ['hico', 'vcoco', 'hoia'], args.dataset_file
+    if args.dataset_file in ['hico']:
+        num_classes = 91
+        num_actions = 118
+    elif args.dataset_file in ['vcoco']:
+        num_classes = 91
+        num_actions = 30
+    else:
+        num_classes = 12
+        num_actions = 11
 
     device = torch.device(args.device)
 
@@ -354,6 +362,7 @@ def build(args):
         backbone,
         transformer,
         num_classes=num_classes,
+        num_actions=num_actions,
         num_queries=args.num_queries,
         aux_loss=args.aux_loss,
     )
@@ -371,8 +380,8 @@ def build(args):
 
     losses = ['labels', 'boxes', 'cardinality']
 
-    criterion = SetCriterion(num_classes, matcher=matcher, weight_dict=weight_dict,
-                             eos_coef=args.eos_coef, losses=losses)
+    criterion = SetCriterion(num_classes=num_classes, num_actions=num_actions, matcher=matcher,
+                             weight_dict=weight_dict, eos_coef=args.eos_coef, losses=losses)
     criterion.to(device)
 
     return model, criterion
