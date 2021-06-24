@@ -361,7 +361,7 @@ def eval_once(args, model_result_path, hoi_th=0.9, human_th=0.5, object_th=0.8, 
 
     os.system('echo %s >> final_report.txt' % result_file)
     if args.dataset_file == 'hico':
-        os.system('python3 eval_hico.py --output_file=%s >> final_report.txt' % result_file)
+        os.system('python3 tools/eval/eval_hico.py --output_file=%s >> final_report.txt' % result_file)
     elif args.dataset_file == 'vcoco':
         os.system('python3 tools/eval/eval_vcoco.py --output_file=%s >> final_report.txt' % result_file)
     else:
