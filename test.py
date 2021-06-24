@@ -14,7 +14,10 @@ import torch
 from torch.utils.data import DataLoader
 
 from datasets import build_dataset
-from datasets.hico import coco_instance_ID_to_name, hoi_interaction_names
+from datasets.hico import hoi_interaction_names as hoi_interaction_names_hico
+from datasets.hico import coco_instance_ID_to_name as coco_instance_ID_to_name_hico
+from datasets.vcoco import hoi_interaction_names as hoi_interaction_names_vcoco
+from datasets.vcoco import coco_instance_ID_to_name as coco_instance_ID_to_name_vcoco
 from models import build_model
 import util.misc as utils
 
@@ -30,7 +33,7 @@ def get_args_parser():
     parser.add_argument('--clip_max_norm', default=0.1, type=float, help='gradient clipping max norm')
 
     # Backbone.
-    parser.add_argument('--backbone', default='resnet50', type=str,
+    parser.add_argument('--backbone', choices=['resnet50', 'resnet101'], required=True,
                         help="Name of the convolutional backbone to use")
     parser.add_argument('--position_embedding', default='sine', type=str, choices=('sine', 'learned'),
                         help="Type of positional embedding to use on top of the image features")
@@ -67,11 +70,11 @@ def get_args_parser():
     parser.add_argument('--dice_loss_coef', default=1, type=float)
     parser.add_argument('--bbox_loss_coef', default=5, type=float)
     parser.add_argument('--giou_loss_coef', default=2, type=float)
-    parser.add_argument('--eos_coef', default=0.1, type=float,
+    parser.add_argument('--eos_coef', default=0.02, type=float,
                         help="Relative classification weight of the no-object class")
 
     # Dataset parameters.
-    parser.add_argument('--dataset_file', default='hico')
+    parser.add_argument('--dataset_file', choices=['hico', 'vcoco', 'hoia'], required=True)
 
     parser.add_argument('--model_path', required=True,
                         help='Path of the model to evaluate.')
@@ -205,7 +208,24 @@ def inference_on_data(args, model_path, image_set, max_to_viz=10, test_scale=-1)
     return file_path
 
 
-def parse_model_result(result_path, hoi_th=0.9, human_th=0.5, object_th=0.8, max_to_viz=10):
+def parse_model_result(args, result_path, hoi_th=0.9, human_th=0.5, object_th=0.8, max_to_viz=10):
+    assert args.dataset_file in ['hico', 'vcoco', 'hoia'], args.dataset_file
+    if args.dataset_file == 'hico':
+        num_classes = 91
+        num_actions = 118
+        hoi_interaction_names = hoi_interaction_names_hico
+        coco_instance_id_to_name = coco_instance_ID_to_name_hico
+    elif args.dataset_file == 'vcoco':
+        num_classes = 91
+        num_actions = 30
+        hoi_interaction_names = hoi_interaction_names_vcoco
+        coco_instance_id_to_name = coco_instance_ID_to_name_vcoco
+    else:
+        num_classes = 12
+        num_actions = 11
+        hoi_interaction_names = None
+        coco_instance_id_to_name = None
+
     with open(result_path, 'rb') as f:
         output_list = torch.load(f, map_location='cpu')
 
@@ -227,15 +247,15 @@ def parse_model_result(result_path, hoi_th=0.9, human_th=0.5, object_th=0.8, max
             image_id = img_id_list[idx_img]
             hh, ww = org_sizes[idx_img]
 
-            act_cls = torch.nn.Sigmoid()(action_pred_logits[idx_img]).detach().cpu().numpy()[:, :-1]
-            human_cls = torch.nn.Sigmoid()(human_pred_logits[idx_img]).detach().cpu().numpy()[:, :-1]
+            act_cls = torch.nn.Softmax()(action_pred_logits[idx_img]).detach().cpu().numpy()[:, :-1]
+            human_cls = torch.nn.Softmax()(human_pred_logits[idx_img]).detach().cpu().numpy()[:, :-1]
             human_box = human_pred_boxes[idx_img].detach().cpu().numpy()
-            object_cls = torch.nn.Sigmoid()(object_pred_logits[idx_img]).detach().cpu().numpy()[:, :-1]
+            object_cls = torch.nn.Softmax()(object_pred_logits[idx_img]).detach().cpu().numpy()[:, :-1]
             object_box = object_pred_boxes[idx_img].detach().cpu().numpy()
 
-            keep = (act_cls.argmax(axis=1) != 118)
+            keep = (act_cls.argmax(axis=1) != num_actions)
             keep = keep * (human_cls.argmax(axis=1) != 2)
-            keep = keep * (object_cls.argmax(axis=1) != 91)
+            keep = keep * (object_cls.argmax(axis=1) != num_classes)
             keep = keep * (act_cls > hoi_th).any(axis=1)
             keep = keep * (human_cls > human_th).any(axis=1)
             keep = keep * (object_cls > object_th).any(axis=1)
@@ -250,7 +270,7 @@ def parse_model_result(result_path, hoi_th=0.9, human_th=0.5, object_th=0.8, max
 
             keep_act_scores_1d = keep_act_scores.reshape(-1)
             top_k_idx_1d = np.argsort(-keep_act_scores_1d)[:200]
-            box_action_pairs = [(idx_1d // 118, idx_1d % 118) for idx_1d in top_k_idx_1d]
+            box_action_pairs = [(idx_1d // num_actions, idx_1d % num_actions) for idx_1d in top_k_idx_1d]
 
             hoi_list = []
             for idx_box, idx_action in box_action_pairs:
@@ -266,14 +286,14 @@ def parse_model_result(result_path, hoi_th=0.9, human_th=0.5, object_th=0.8, max
                 cx, cy, w, h = cx * ww, cy * hh, w * ww, h * hh
                 h_box = list(map(int, [cx - 0.5 * w, cy - 0.5 * h, cx + 0.5 * w, cy + 0.5 * h]))
                 h_cls = human_val_max_list[idx_box]
-                h_name = coco_instance_ID_to_name[int(cid)]
+                h_name = coco_instance_id_to_name[int(cid)]
                 # object
                 cid = object_idx_max_list[idx_box]
                 cx, cy, w, h = object_box_max_list[idx_box]
                 cx, cy, w, h = cx * ww, cy * hh, w * ww, h * hh
                 o_box = list(map(int, [cx - 0.5 * w, cy - 0.5 * h, cx + 0.5 * w, cy + 0.5 * h]))
                 o_cls = object_val_max_list[idx_box]
-                o_name = coco_instance_ID_to_name[int(cid)]
+                o_name = coco_instance_id_to_name[int(cid)]
                 pp = dict(
                     h_box=h_box, o_box=o_box, i_box=i_box, h_cls=float(h_cls), o_cls=float(o_cls),
                     i_cls=float(i_cls), h_name=h_name, o_name=o_name, i_name=i_name,
@@ -315,8 +335,9 @@ def draw_on_image(image_id, hoi_list, image_path):
     cv2.imwrite(image_path, img_result)
 
 
-def eval_once(model_result_path, hoi_th=0.9, human_th=0.5, object_th=0.8, max_to_viz=10, save_image=False):
+def eval_once(args, model_result_path, hoi_th=0.9, human_th=0.5, object_th=0.8, max_to_viz=10, save_image=False):
     hoi_result_list = parse_model_result(
+        args=args,
         result_path=model_result_path,
         hoi_th=hoi_th,
         human_th=human_th,
@@ -347,10 +368,11 @@ def run_and_eval(args, model_path, test_scale, max_to_viz=10, save_image=False):
         max_to_viz=max_to_viz,
     )
 
-    for hoi_th in [0.1]:
-        for human_th in [0.1]:
-            for object_th in [0.1]:
+    for hoi_th in [0.0]:
+        for human_th in [0.0]:
+            for object_th in [0.0]:
                 eval_once(
+                    args=args,
                     model_result_path=model_output_file,
                     hoi_th=hoi_th,
                     human_th=human_th,
@@ -361,9 +383,9 @@ def run_and_eval(args, model_path, test_scale, max_to_viz=10, save_image=False):
     pass
 
 
-if __name__ == '__main__':
+def main():
     """
-    python3 test.py --dataset_file=hico --batch_size=1 --log_dir=./ --model_path=your_model_path
+    python3 test.py --dataset_file=hico --backbone=resnet50 --batch_size=1 --log_dir=./ --model_path=your_model_path
     """
     parser = get_args_parser()
     args = parser.parse_args()
@@ -384,3 +406,7 @@ if __name__ == '__main__':
                 save_image=False,
             )
     print('done')
+
+
+if __name__ == '__main__':
+    main()
