@@ -213,16 +213,19 @@ def parse_model_result(args, result_path, hoi_th=0.9, human_th=0.5, object_th=0.
     if args.dataset_file == 'hico':
         num_classes = 91
         num_actions = 118
+        top_k = 100
         hoi_interaction_names = hoi_interaction_names_hico
         coco_instance_id_to_name = coco_instance_ID_to_name_hico
     elif args.dataset_file == 'vcoco':
         num_classes = 91
         num_actions = 30
+        top_k = 35
         hoi_interaction_names = hoi_interaction_names_vcoco
         coco_instance_id_to_name = coco_instance_ID_to_name_vcoco
     else:
         num_classes = 12
         num_actions = 11
+        top_k = 35
         hoi_interaction_names = None
         coco_instance_id_to_name = None
 
@@ -269,7 +272,7 @@ def parse_model_result(args, result_path, hoi_th=0.9, human_th=0.5, object_th=0.
             keep_act_scores = act_cls[keep]
 
             keep_act_scores_1d = keep_act_scores.reshape(-1)
-            top_k_idx_1d = np.argsort(-keep_act_scores_1d)[:100]
+            top_k_idx_1d = np.argsort(-keep_act_scores_1d)[:top_k]
             box_action_pairs = [(idx_1d // num_actions, idx_1d % num_actions) for idx_1d in top_k_idx_1d]
 
             hoi_list = []
