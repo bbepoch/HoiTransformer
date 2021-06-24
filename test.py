@@ -294,6 +294,8 @@ def parse_model_result(args, result_path, hoi_th=0.9, human_th=0.5, object_th=0.
                 o_box = list(map(int, [cx - 0.5 * w, cy - 0.5 * h, cx + 0.5 * w, cy + 0.5 * h]))
                 o_cls = object_val_max_list[idx_box]
                 o_name = coco_instance_id_to_name[int(cid)]
+                if i_cls < hoi_th or h_cls < human_th or o_cls < object_th:
+                    continue
                 pp = dict(
                     h_box=h_box, o_box=o_box, i_box=i_box, h_cls=float(h_cls), o_cls=float(o_cls),
                     i_cls=float(i_cls), h_name=h_name, o_name=o_name, i_name=i_name,
@@ -336,6 +338,8 @@ def draw_on_image(image_id, hoi_list, image_path):
 
 
 def eval_once(args, model_result_path, hoi_th=0.9, human_th=0.5, object_th=0.8, max_to_viz=10, save_image=False):
+    assert args.dataset_file in ['hico', 'vcoco', 'hoia'], args.dataset_file
+
     hoi_result_list = parse_model_result(
         args=args,
         result_path=model_result_path,
@@ -353,10 +357,15 @@ def eval_once(args, model_result_path, hoi_th=0.9, human_th=0.5, object_th=0.8, 
                 img_path = '%s/dt_%02d.jpg' % (os.path.dirname(model_result_path), idx_img)
                 draw_on_image(item['image_id'], item['hoi_list'], image_path=img_path)
 
-    os.system('echo %.4f %.4f %.4f %s >> final_report.txt' % (human_th, object_th, hoi_th, result_file))
-    os.system('python3 eval_hico.py --output_file=%s >> final_report.txt' % result_file)
-    print(human_th, object_th, hoi_th)
-    print('--------------------above')
+    os.system('echo %s >> final_report.txt' % result_file)
+    if args.dataset_file == 'hico':
+        os.system('python3 eval_hico.py --output_file=%s >> final_report.txt' % result_file)
+    elif args.dataset_file == 'vcoco':
+        os.system('python3 tools/eval/eval_vcoco.py --output_file=%s >> final_report.txt' % result_file)
+    else:
+        pass
+    os.system('echo %s >> final_report.txt' % '%f %f %f\n' % (human_th, object_th, hoi_th))
+    print(human_th, object_th, hoi_th, '--------------------above')
 
 
 def run_and_eval(args, model_path, test_scale, max_to_viz=10, save_image=False):
