@@ -424,12 +424,12 @@ coco_classes_originID = {
 }
 
 
-def get_hoi_output(Image_dets, corre_mat=None, nid2name=None):
+def get_hoi_output(Image_dets, corre_mat=None):
     # 如果Object不满足 就要乘上0 纯评测
     output_hoi = []
     for Image_det in tqdm(Image_dets, desc="trans output into eval format"):
         Image_det = json.loads(Image_det)
-        file_name = nid2name[Image_det['image_id']]
+        file_name = Image_det['image_id']
         output = {'predictions': [], 'hoi_prediction': [], 'file_name': file_name}
         count = 0
         for det in Image_det['hoi_list']:
@@ -481,8 +481,7 @@ if __name__ == "__main__":
 
     corre_mat = np.ones(shape=(117, 80))
     print(f"DEBUG: corre_mat shape = {corre_mat.shape}")
-    nid2name = json.load(open(os.path.join(args.eval_path, "nid2fname.json"), 'r'))
-    output_hoi = get_hoi_output(det, corre_mat, nid2name)
+    output_hoi = get_hoi_output(det, corre_mat)
 
     # 2. evaluation
     hoi_eval = hico(os.path.join(args.eval_path, 'test_hico.json'))
