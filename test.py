@@ -216,7 +216,7 @@ def parse_model_result(args, result_path, hoi_th=0.9, human_th=0.5, object_th=0.
     if args.dataset_file == 'hico':
         num_classes = 91
         num_actions = 118
-        top_k = 100
+        top_k = 200
         hoi_interaction_names = hoi_interaction_names_hico
         coco_instance_id_to_name = coco_instance_ID_to_name_hico
     elif args.dataset_file == 'vcoco':
