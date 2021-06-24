@@ -135,12 +135,12 @@ coco_classes_originID = {
 # ---------------------------------------
 
 
-def get_hoi_output(Image_dets, corre_mat=None, nid2name=None):
+def get_hoi_output(Image_dets, corre_mat=None):
     # 如果Object不满足 就要乘上0 纯评测
     output_hoi = []
     for Image_det in tqdm(Image_dets, desc="trans output into eval format"):
         Image_det = json.loads(Image_det)
-        file_name = nid2name[Image_det['image_id']]
+        file_name = Image_det['image_id']
         output = {'predictions': [], 'hoi_prediction': [], 'file_name': file_name}
         count = 0
         for det in Image_det['hoi_list']:
@@ -234,7 +234,6 @@ if __name__ == "__main__":
     vcocoeval = VCOCOeval(vsrl_annot_file, coco_file, split_file)
     fname2cocoid = f"{args.eval_path}/fname2imgid_test.json"
     output_file = f"{args.eval_path}/test_vcoco_final.pkl"
-    nid2name = json.load(open(f"{args.eval_path}/nid2fname.json"))
 
     # 1. transform hoi output
     with open(args.output_file, "r") as f:
@@ -242,14 +241,12 @@ if __name__ == "__main__":
     print(f"DEBUG: results = {len(det)}")
 
     if args.use_prior:
-    # 32.07  39.3
         corre_mat = np.load(os.path.join(args.eval_path, 'corre_verbcoco_v2.npy'))
     else:
-        # np ones 32.1 39.33
         corre_mat = np.ones(shape=(25, 80))
     print(f"DEBUG: corre_mat shape = {corre_mat.shape}")
 
-    output_hoi = get_hoi_output(det, corre_mat, nid2name)
+    output_hoi = get_hoi_output(det, corre_mat)
 
     trans_output_hoi = post_process(output_hoi, fname2cocoid)
     pickle.dump(trans_output_hoi, open(output_file, "wb"))

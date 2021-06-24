@@ -92,6 +92,10 @@ def get_args_parser():
     parser.add_argument('--world_size', default=1, type=int,
                         help='number of distributed processes')
     parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
+
+    # Visualization.
+    parser.add_argument('--max_to_viz', default=10, type=int, help='number of images to visualize')
+    parser.add_argument('--save_image', action='store_true', help='whether to save visualization images')
     return parser
 
 
@@ -249,9 +253,9 @@ def parse_model_result(args, result_path, hoi_th=0.9, human_th=0.5, object_th=0.
             image_id = img_id_list[idx_img]
             hh, ww = org_sizes[idx_img]
 
-            act_cls = torch.nn.Softmax()(action_pred_logits[idx_img]).detach().cpu().numpy()[:, :-1]
-            human_cls = torch.nn.Softmax()(human_pred_logits[idx_img]).detach().cpu().numpy()[:, :-1]
-            object_cls = torch.nn.Softmax()(object_pred_logits[idx_img]).detach().cpu().numpy()[:, :-1]
+            act_cls = torch.nn.Softmax(dim=1)(action_pred_logits[idx_img]).detach().cpu().numpy()[:, :-1]
+            human_cls = torch.nn.Softmax(dim=1)(human_pred_logits[idx_img]).detach().cpu().numpy()[:, :-1]
+            object_cls = torch.nn.Softmax(dim=1)(object_pred_logits[idx_img]).detach().cpu().numpy()[:, :-1]
             human_box = human_pred_boxes[idx_img].detach().cpu().numpy()
             object_box = object_pred_boxes[idx_img].detach().cpu().numpy()
 
@@ -310,15 +314,26 @@ def parse_model_result(args, result_path, hoi_th=0.9, human_th=0.5, object_th=0.
     return final_hoi_result_list
 
 
-def draw_on_image(image_id, hoi_list, image_path):
+def draw_on_image(args, image_id, hoi_list, image_path):
     img_name = image_id
-    if 'train2015' in img_name:
-        img_path = './data/hico/images/train2015/%s' % img_name
-    elif 'test2015' in img_name:
-        img_path = './data/hico/images/test2015/%s' % img_name
-    else:  # For single image visualization.
-        img_path = img_name
+    assert args.dataset_file in ['hico', 'vcoco', 'hoia'], args.dataset_file
+    if args.dataset_file == 'hico':
+        if 'train2015' in img_name:
+            img_path = './data/hico/images/train2015/%s' % img_name
+        elif 'test2015' in img_name:
+            img_path = './data/hico/images/test2015/%s' % img_name
+        else:  # For single image visualization.
+            raise NotImplementedError()
+    elif args.dataset_file == 'vcoco':
+        if 'train2014' in img_name:
+            img_path = './data/vcoco/images/train2014/%s' % img_name
+        elif 'val2014' in img_name:
+            img_path = './data/vcoco/images/val2014/%s' % img_name
+        else:  # For single image visualization.
+            raise NotImplementedError()
+    else:
         raise NotImplementedError()
+
     img_result = cv2.imread(img_path, cv2.IMREAD_COLOR)
     for idx_box, hoi in enumerate(hoi_list):
         color = random_color()
@@ -336,6 +351,9 @@ def draw_on_image(image_id, hoi_list, image_path):
         o_cls, o_name = hoi['o_cls'], hoi['o_name']
         cv2.rectangle(img_result, (x1, y1), (x2, y2), color, 2)
         cv2.putText(img_result, '%s:%.4f' % (o_name, o_cls), (x1, y2), cv2.FONT_HERSHEY_COMPLEX, 1, color, 2)
+    if img_result.shape[0] > 640:
+        ratio = img_result.shape[0] / 640
+        img_result = cv2.resize(img_result, (int(img_result.shape[1] / ratio), int(img_result.shape[0] / ratio)))
     cv2.imwrite(image_path, img_result)
 
 
@@ -357,7 +375,7 @@ def eval_once(args, model_result_path, hoi_th=0.9, human_th=0.5, object_th=0.8, 
             writer.write(json.dumps(item) + '\n')
             if save_image and idx_img < max_to_viz:
                 img_path = '%s/dt_%02d.jpg' % (os.path.dirname(model_result_path), idx_img)
-                draw_on_image(item['image_id'], item['hoi_list'], image_path=img_path)
+                draw_on_image(args, item['image_id'], item['hoi_list'], image_path=img_path)
 
     os.system('echo %s >> final_report.txt' % result_file)
     if args.dataset_file == 'hico':
@@ -413,8 +431,8 @@ def main():
                 args=args,
                 model_path=model_path,
                 test_scale=test_scale,
-                max_to_viz=200*100,
-                save_image=False,
+                max_to_viz=args.max_to_viz if args.save_image else 200*100,
+                save_image=args.save_image,
             )
     print('done')
 

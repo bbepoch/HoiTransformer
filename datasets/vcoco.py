@@ -293,7 +293,7 @@ def get_hoi_annotation_from_odgt(item, total_boxes, scale):
         object_labels=torch.from_numpy(np.array(object_labels)),
         action_boxes=torch.from_numpy(np.array(action_boxes).astype(np.float32)),
         action_labels=torch.from_numpy(np.array(action_labels)),
-        image_id=item['ID'],
+        image_id=item['file_name'],
         org_size=torch.as_tensor([int(img_hh), int(img_ww)]),
     )
 
@@ -566,8 +566,7 @@ class HoiDetection(VisionDataset):
             img_path = './data/vcoco/images/train2014/%s' % img_name
         elif 'val2014' in img_name:
             img_path = './data/vcoco/images/val2014/%s' % img_name
-        else:  # For single image visualization.
-            img_path = img_name
+        else:
             raise NotImplementedError()
         img = cv2.imread(img_path, cv2.IMREAD_COLOR)
         img = Image.fromarray(img[:, :, ::-1]).convert('RGB')
