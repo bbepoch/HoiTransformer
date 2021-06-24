@@ -104,8 +104,7 @@ def random_color():
 
 
 def create_log_folder(base_dir='/data/LOG/visualization'):
-    exp_name = os.path.basename(os.path.abspath('.'))
-    log_dir = os.path.join(base_dir, exp_name)
+    log_dir = os.path.join(base_dir, 'log')
     if not os.path.exists(log_dir):
         os.makedirs(log_dir, exist_ok=True)
     return log_dir
