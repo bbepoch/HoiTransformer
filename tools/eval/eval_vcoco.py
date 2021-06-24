@@ -1,4 +1,4 @@
-from tools.eval.vsrl_eval import VCOCOeval
+from vsrl_eval import VCOCOeval
 import numpy as np
 import json
 from tqdm import tqdm

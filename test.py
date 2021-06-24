@@ -249,8 +249,8 @@ def parse_model_result(args, result_path, hoi_th=0.9, human_th=0.5, object_th=0.
 
             act_cls = torch.nn.Softmax()(action_pred_logits[idx_img]).detach().cpu().numpy()[:, :-1]
             human_cls = torch.nn.Softmax()(human_pred_logits[idx_img]).detach().cpu().numpy()[:, :-1]
-            human_box = human_pred_boxes[idx_img].detach().cpu().numpy()
             object_cls = torch.nn.Softmax()(object_pred_logits[idx_img]).detach().cpu().numpy()[:, :-1]
+            human_box = human_pred_boxes[idx_img].detach().cpu().numpy()
             object_box = object_pred_boxes[idx_img].detach().cpu().numpy()
 
             keep = (act_cls.argmax(axis=1) != num_actions)
@@ -269,7 +269,7 @@ def parse_model_result(args, result_path, hoi_th=0.9, human_th=0.5, object_th=0.
             keep_act_scores = act_cls[keep]
 
             keep_act_scores_1d = keep_act_scores.reshape(-1)
-            top_k_idx_1d = np.argsort(-keep_act_scores_1d)[:200]
+            top_k_idx_1d = np.argsort(-keep_act_scores_1d)[:100]
             box_action_pairs = [(idx_1d // num_actions, idx_1d % num_actions) for idx_1d in top_k_idx_1d]
 
             hoi_list = []
@@ -377,9 +377,9 @@ def run_and_eval(args, model_path, test_scale, max_to_viz=10, save_image=False):
         max_to_viz=max_to_viz,
     )
 
-    for hoi_th in [0.0]:
-        for human_th in [0.0]:
-            for object_th in [0.0]:
+    for human_th in [0.0]:
+        for object_th in [0.0]:
+            for hoi_th in [0.0]:
                 eval_once(
                     args=args,
                     model_result_path=model_output_file,
