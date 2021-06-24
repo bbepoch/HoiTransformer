@@ -222,7 +222,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--output_file", type=str)
-    parser.add_argument("--eval_path", default="/data/DATA/VCOCO/eval")
+    parser.add_argument("--eval_path", default="./data/vcoco/eval")
     parser.add_argument("--use_prior", action="store_true")
 
     args = parser.parse_args()
