@@ -107,13 +107,6 @@ def random_color():
     return b, g, r
 
 
-def create_log_folder(base_dir='/data/LOG/visualization'):
-    log_dir = os.path.join(base_dir, 'log')
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir, exist_ok=True)
-    return log_dir
-
-
 def intersection(box_a, box_b):
     # box: x1, y1, x2, y2
     x1 = max(box_a[0], box_b[0])
@@ -170,15 +163,19 @@ def inference_on_data(args, model_path, image_set, max_to_viz=10, test_scale=-1)
     data_loader_val = DataLoader(dataset_val, args.batch_size, sampler=sampler_val,
                                  drop_last=False, collate_fn=utils.collate_fn, num_workers=args.num_workers)
 
-    log_dir = create_log_folder(args.log_dir)
+    log_dir = os.path.join(args.log_dir, 'log')
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir, exist_ok=True)
+
     assert os.path.exists(log_dir), log_dir
-    file_name = 'result_s%03d_e%03d.pkl' % (0 if test_scale == -1 else test_scale, epoch)
+    file_name = 'result_s%03d_e%03d_%s_%s.pkl' \
+                % (0 if test_scale == -1 else test_scale, epoch, args.dataset_file, args.backbone)
     file_path = os.path.join(log_dir, file_name)
     if os.path.exists(file_path):
         print('step1: file exists, inference done.')
         return file_path
 
-    pbar = tqdm(total=max_to_viz)
+    p_bar = tqdm(total=max_to_viz)
 
     idx_batch, result_list = 0, []
     for samples, targets in data_loader_val:
@@ -203,7 +200,7 @@ def inference_on_data(args, model_path, image_set, max_to_viz=10, test_scale=-1)
             human_pred_logits=human_pred_logits.detach().cpu(),
             human_pred_boxes=human_pred_boxes.detach().cpu(),
         ))
-        pbar.update()
+        p_bar.update()
 
     with open(file_path, 'wb') as f:
         torch.save(result_list, f)
@@ -322,14 +319,14 @@ def draw_on_image(args, image_id, hoi_list, image_path):
             img_path = './data/hico/images/train2015/%s' % img_name
         elif 'test2015' in img_name:
             img_path = './data/hico/images/test2015/%s' % img_name
-        else:  # For single image visualization.
+        else:
             raise NotImplementedError()
     elif args.dataset_file == 'vcoco':
         if 'train2014' in img_name:
             img_path = './data/vcoco/images/train2014/%s' % img_name
         elif 'val2014' in img_name:
             img_path = './data/vcoco/images/val2014/%s' % img_name
-        else:  # For single image visualization.
+        else:
             raise NotImplementedError()
     else:
         raise NotImplementedError()
