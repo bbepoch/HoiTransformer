@@ -277,24 +277,27 @@ def get_hoi_annotation_from_odgt(item, total_boxes, scale):
         object_labels=torch.from_numpy(np.array(object_labels)),
         action_boxes=torch.from_numpy(np.array(action_boxes).astype(np.float32)),
         action_labels=torch.from_numpy(np.array(action_labels)),
-        image_id=item['hico_image_name'],
+        image_id=item['file_name'],
         org_size=torch.as_tensor([int(img_hh), int(img_ww)]),
     )
 
 
 def parse_one_gt_line(gt_line, scale=1):
     item = json.loads(gt_line)
-    img_name = item['hico_image_name']
+    img_name = item['file_name']
     img_shape = item['height'], item['width']
     gt_boxes, ignored_boxes, total_boxes = get_det_annotation_from_odgt(item, img_shape, flip=0)
     interaction_boxes = get_hoi_annotation_from_odgt(item, total_boxes, scale)
     return dict(image_id=img_name, annotations=interaction_boxes)
 
 
-def hflip(image, target):
+def hflip(image, target, image_set='train'):
     flipped_image = F.hflip(image)
-    w, h = image.size
     target = target.copy()
+    if image_set in ['test']:
+        return flipped_image, target
+
+    w, h = image.size
     if "human_boxes" in target:
         boxes = target["human_boxes"]
         boxes = boxes[:, [2, 1, 0, 3]] * torch.as_tensor([-1, 1, -1, 1]) + torch.as_tensor([w, 0, w, 0])
@@ -314,9 +317,9 @@ class RandomHorizontalFlip(object):
     def __init__(self, p=0.5):
         self.p = p
 
-    def __call__(self, img, target):
+    def __call__(self, img, target, image_set='train'):
         if random.random() < self.p:
-            return hflip(img, target)
+            return hflip(img, target, image_set)
         return img, target
 
 
@@ -324,7 +327,7 @@ class RandomAdjustImage(object):
     def __init__(self, p=0.5):
         self.p = p
 
-    def __call__(self, img, target):
+    def __call__(self, img, target, image_set='train'):
         if random.random() < self.p:
             img = F.adjust_brightness(img, random.choice([0.8, 0.9, 1.0, 1.1, 1.2]))
         if random.random() < self.p:
@@ -342,13 +345,13 @@ class RandomSelect(object):
         self.transforms2 = transforms2
         self.p = p
 
-    def __call__(self, img, target):
+    def __call__(self, img, target, image_set='train'):
         if random.random() < self.p:
-            return self.transforms1(img, target)
-        return self.transforms2(img, target)
+            return self.transforms1(img, target, image_set)
+        return self.transforms2(img, target, image_set)
 
 
-def resize(image, target, size, max_size=None):
+def resize(image, target, size, max_size=None, image_set='train'):
     def get_size_with_aspect_ratio(image_size, size, max_size=None):
         w, h = image_size
         if max_size is not None:
@@ -371,11 +374,13 @@ def resize(image, target, size, max_size=None):
 
     if target is None:
         return rescaled_image, None
+    target = target.copy()
+    if image_set in ['test']:
+        return rescaled_image, target
 
     ratios = tuple(float(s) / float(s_orig) for s, s_orig in zip(rescaled_image.size, image.size))
     ratio_width, ratio_height = ratios
 
-    target = target.copy()
     if "human_boxes" in target:
         boxes = target["human_boxes"]
         scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
@@ -397,14 +402,17 @@ class RandomResize(object):
         self.sizes = sizes
         self.max_size = max_size
 
-    def __call__(self, img, target=None):
+    def __call__(self, img, target=None, image_set='train'):
         size = random.choice(self.sizes)
-        return resize(img, target, size, self.max_size)
+        return resize(img, target, size, self.max_size, image_set)
 
 
-def crop(image, org_target, region):
+def crop(image, org_target, region, image_set='train'):
     cropped_image = F.crop(image, *region)
     target = org_target.copy()
+    if image_set in ['test']:
+        return cropped_image, target
+
     i, j, h, w = region
     fields = ["human_labels", "object_labels", "action_labels"]
 
@@ -452,15 +460,15 @@ class RandomSizeCrop(object):
         self.min_size = min_size
         self.max_size = max_size
 
-    def __call__(self, img: PIL.Image.Image, target: dict):
+    def __call__(self, img: PIL.Image.Image, target: dict, image_set='train'):
         w = random.randint(self.min_size, min(img.width, self.max_size))
         h = random.randint(self.min_size, min(img.height, self.max_size))
         region = T.RandomCrop.get_params(img, (h, w))
-        return crop(img, target, region)
+        return crop(img, target, region, image_set)
 
 
 class ToTensor(object):
-    def __call__(self, img, target):
+    def __call__(self, img, target, image_set='train'):
         return torchvision.transforms.functional.to_tensor(img), target
 
 
@@ -469,11 +477,13 @@ class Normalize(object):
         self.mean = mean
         self.std = std
 
-    def __call__(self, image, target):
+    def __call__(self, image, target, image_set='train'):
         image = torchvision.transforms.functional.normalize(image, mean=self.mean, std=self.std)
         if target is None:
             return image, None
         target = target.copy()
+        if image_set in ['test']:
+            return image, target
         h, w = image.shape[-2:]
         if "human_boxes" in target:
             boxes = target["human_boxes"]
@@ -497,9 +507,9 @@ class Compose(object):
     def __init__(self, transforms):
         self.transforms = transforms
 
-    def __call__(self, image, target):
+    def __call__(self, image, target, image_set='train'):
         for t in self.transforms:
-            image, target = t(image, target)
+            image, target = t(image, target, image_set)
         return image, target
 
 
@@ -541,9 +551,15 @@ class HoiDetection(VisionDataset):
         You are supposed to make a soft link named 'images' in 'data/hico/' to refer to your HICO-DET images' path.
         E.g. ln -s /path-to-your-hico-det-dataset/hico_20160224_det/images images
     """
-    def __init__(self, root, annFile, transform=None, target_transform=None, transforms=None):
+    def __init__(self, root, annFile, transform=None, target_transform=None, transforms=None, image_set='train'):
+        assert image_set in ['train', 'test'], image_set
+        self.image_set = image_set
         super(HoiDetection, self).__init__(root, transforms, transform, target_transform)
-        self.annotations = [parse_one_gt_line(l.strip()) for l in open(annFile, 'r').readlines()]
+        annotations = [parse_one_gt_line(l.strip()) for l in open(annFile, 'r').readlines()]
+        if self.image_set in ['train']:
+            self.annotations = [a for a in annotations if len(a['annotations']['action_labels']) > 0]
+        else:
+            self.annotations = annotations
         self.transforms = transforms
 
     def __getitem__(self, index):
@@ -559,7 +575,7 @@ class HoiDetection(VisionDataset):
         img = cv2.imread(img_path, cv2.IMREAD_COLOR)
         img = Image.fromarray(img[:, :, ::-1]).convert('RGB')
         if self.transforms is not None:
-            img, target = self.transforms(img, target)
+            img, target = self.transforms(img, target, self.image_set)
         return img, target
 
     def __len__(self):
@@ -569,10 +585,10 @@ class HoiDetection(VisionDataset):
 def build(image_set, test_scale=-1):
     assert image_set in ['train', 'test'], image_set
     if image_set == 'train':
-        annotation_file = './data/hico/hico_trainval_retag_hoitr.odgt'
+        annotation_file = './data/hico/hico_trainval_remake.odgt'
     else:
-        annotation_file = './data/hico/hico_test_retag_hoitr.odgt'
+        annotation_file = './data/hico/hico_test_remake.odgt'
 
     dataset = HoiDetection(root='./data/hico', annFile=annotation_file,
-                           transforms=make_hico_transforms(image_set, test_scale))
+                           transforms=make_hico_transforms(image_set, test_scale), image_set=image_set)
     return dataset

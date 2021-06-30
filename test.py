@@ -417,7 +417,7 @@ def main():
     args = parser.parse_args()
     print(args)
 
-    scales = [672]
+    scales = [800]
     for test_scale in scales:
         for model_path in [
             args.model_path,
