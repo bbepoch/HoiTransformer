@@ -11,15 +11,12 @@ import torch
 import numpy as np
 import json
 import cv2
-import nori2 as nori
 import random
 import PIL
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 from util.box_ops import box_xyxy_to_cxcywh
 from PIL import Image
-
-fetcher = nori.Fetcher()
 
 
 coco_classes_originID = {
