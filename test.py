@@ -16,6 +16,8 @@ from torch.utils.data import DataLoader
 from datasets import build_dataset
 from datasets.hico import hoi_interaction_names as hoi_interaction_names_hico
 from datasets.hico import coco_instance_ID_to_name as coco_instance_ID_to_name_hico
+from datasets.hoia import hoi_interaction_names as hoi_interaction_names_hoia
+from datasets.hoia import coco_instance_ID_to_name as coco_instance_ID_to_name_hoia
 from datasets.vcoco import hoi_interaction_names as hoi_interaction_names_vcoco
 from datasets.vcoco import coco_instance_ID_to_name as coco_instance_ID_to_name_vcoco
 from models import build_model
@@ -226,8 +228,8 @@ def parse_model_result(args, result_path, hoi_th=0.9, human_th=0.5, object_th=0.
         num_classes = 12
         num_actions = 11
         top_k = 35
-        hoi_interaction_names = None
-        coco_instance_id_to_name = None
+        hoi_interaction_names = hoi_interaction_names_hoia
+        coco_instance_id_to_name = coco_instance_ID_to_name_hoia
 
     with open(result_path, 'rb') as f:
         output_list = torch.load(f, map_location='cpu')
@@ -329,7 +331,12 @@ def draw_on_image(args, image_id, hoi_list, image_path):
         else:
             raise NotImplementedError()
     else:
-        raise NotImplementedError()
+        if 'trainval' in img_name:
+            img_path = './data/hoia/images/trainval/%s' % img_name
+        elif 'test' in img_name:
+            img_path = './data/hoia/images/test/%s' % img_name
+        else:
+            raise NotImplementedError()
 
     img_result = cv2.imread(img_path, cv2.IMREAD_COLOR)
     for idx_box, hoi in enumerate(hoi_list):
@@ -380,7 +387,7 @@ def eval_once(args, model_result_path, hoi_th=0.9, human_th=0.5, object_th=0.8, 
     elif args.dataset_file == 'vcoco':
         os.system('python3 tools/eval/eval_vcoco.py --output_file=%s >> final_report.txt' % result_file)
     else:
-        pass
+        os.system('python3 tools/eval/eval_hoia.py --output_file=%s >> final_report.txt' % result_file)
     os.system('echo %s >> final_report.txt' % '%f %f %f\n' % (human_th, object_th, hoi_th))
     print(human_th, object_th, hoi_th, '--------------------above')
 
