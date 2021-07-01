@@ -264,19 +264,6 @@ def get_hoi_annotation_from_odgt(item, total_boxes, scale):
         hoi_id = hoi_interaction_names.index(hoi['interaction'])
         hoi_box = get_interaction_box(human_box=human_box, object_box=object_box, hoi_id=hoi_id)
 
-        # # xyxy to cxcywh
-        # human_box = xyxy_to_cxcywh(human_box)
-        # object_box = xyxy_to_cxcywh(object_box)
-        # hoi_box = xyxy_to_cxcywh(hoi_box)
-        #
-        # # norm to 0-1
-        # human_box = human_box[0] / img_ww, human_box[1] / img_hh, \
-        #     human_box[2] / img_ww, human_box[3] / img_hh, human_box[4]
-        # object_box = object_box[0] / img_ww, object_box[1] / img_hh, \
-        #     object_box[2] / img_ww, object_box[3] / img_hh, object_box[4]
-        # hoi_box = hoi_box[0] / img_ww, hoi_box[1] / img_hh, \
-        #     hoi_box[2] / img_ww, hoi_box[3] / img_hh, hoi_box[4]
-
         human_boxes.append(human_box[0:4])
         object_boxes.append(object_box[0:4])
         action_boxes.append(hoi_box[0:4])
