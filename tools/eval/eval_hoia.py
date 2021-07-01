@@ -268,6 +268,6 @@ if __name__ == "__main__":
     with open(new_out_file, 'w') as f:
         json.dump(output_hoi, f)
 
-    annotation_file = os.path.join(args.eval_path, 'test_2019_clean.json')
+    annotation_file = os.path.join(args.eval_path, 'test_hoia.json')
     eval_demo = HOIAEval(annotation_file)
     eval_demo.evalution(new_out_file)
