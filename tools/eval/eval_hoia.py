@@ -214,7 +214,7 @@ def get_hoi_output(Image_dets, corre_mat=None):
     output_hoi = []
     for Image_det in tqdm(Image_dets, desc="trans output into eval format"):
         Image_det = json.loads(Image_det)
-        file_name = Image_det['image_name']
+        file_name = Image_det['image_id']
         output = {'predictions': [], 'hoi_prediction': [], 'file_name': file_name}
         count = 0
         for det in Image_det['hoi_list']:
