@@ -47,7 +47,7 @@ def get_args_parser():
     parser.add_argument('--clip_max_norm', default=0.1, type=float, help='gradient clipping max norm')
 
     # Backbone.
-    parser.add_argument('--backbone', default='resnet50', type=str,
+    parser.add_argument('--backbone', choices=['resnet50', 'resnet101'], required=True,
                         help="Name of the convolutional backbone to use")
     parser.add_argument('--position_embedding', default='sine', type=str, choices=('sine', 'learned'),
                         help="Type of positional embedding to use on top of the image features")
@@ -84,11 +84,11 @@ def get_args_parser():
     parser.add_argument('--dice_loss_coef', default=1, type=float)
     parser.add_argument('--bbox_loss_coef', default=5, type=float)
     parser.add_argument('--giou_loss_coef', default=2, type=float)
-    parser.add_argument('--eos_coef', default=0.1, type=float,
+    parser.add_argument('--eos_coef', default=0.02, type=float,
                         help="Relative classification weight of the no-object class")
 
     # Dataset parameters.
-    parser.add_argument('--dataset_file', default='hico')
+    parser.add_argument('--dataset_file', choices=['hico', 'vcoco', 'hoia'], required=True)
 
     # Modify to your log path ******************************* !!!
     exp_time = datetime.datetime.now().strftime('%Y%m%d%H%M')
@@ -175,7 +175,7 @@ def main(args):
     if args.resume:
         checkpoint = torch.load(args.resume, map_location='cpu')
         model_without_ddp.load_state_dict(checkpoint['model'])
-        if not args.eval and 'optimizer' in checkpoint and 'lr_scheduler' in checkpoint and 'epoch' in checkpoint:
+        if 'optimizer' in checkpoint and 'lr_scheduler' in checkpoint and 'epoch' in checkpoint:
             optimizer.load_state_dict(checkpoint['optimizer'])
             lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
             args.start_epoch = checkpoint['epoch'] + 1

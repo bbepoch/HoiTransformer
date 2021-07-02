@@ -9,5 +9,4 @@ from .hoitr import build as build_hoitr
 
 
 def build_model(args):
-    if args.dataset_file == 'hico':
-        return build_hoitr(args)
+    return build_hoitr(args)
