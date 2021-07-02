@@ -83,21 +83,21 @@ python3 test.py --backbone=resnet50 --batch_size=1 --dataset_file=hico --log_dir
 We propose a new annotation format 'ODGT' which is much easier to understand, and we have provided annotation files for all the existing benchmarks, i.e. HICO-DET, HOI-A, V-COCO, so just use them. The core structure of ODGT format is:
 ```json
 {
-    file_name: XXX.jpg,
-    width: image width,
-    height: image height,
-    gtboxes: [
+    'file_name': 'XXX.jpg',
+    'width': 'image width',
+    'height': 'image height',
+    'gtboxes': [
         {
-            box: [x, y, w, h],
-            tag: object category name,
+            'box': [x, y, w, h],
+            'tag': 'object category name',
         },
         ...
     ],
-    hoi: [
+    'hoi': [
         {
-            subject_id: human box index in gtboxes,
-            object_id: object_box index in gtboxes,
-            interaction: hoi category name,
+            'subject_id': 'human box index in gtboxes',
+            'object_id': 'object_box index in gtboxes',
+            'interaction: hoi category name',
         },
         ...
     ],
