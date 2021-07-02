@@ -106,6 +106,16 @@ We propose a new annotation format 'ODGT' which is much easier to understand, an
 ```
 
 
+## TODO list
+- [x] HICO-DET dataset
+- [x] V-COCO dataset
+- [x] HOI-A dataset
+- [x] HICO-DET resnet50 [model](https://drive.google.com/file/d/1gg8X2IHOkMq15iaAE60yrH28inQadkPO/view?usp=sharing)
+- [ ] V-COCO resnet50 model
+- [ ] HOI-A resnet50 model
+- [ ] Swin-B model
+
+
 ## Citation
 ```
 @inproceedings{zou2021_hoitrans,
