@@ -72,10 +72,36 @@ python3 -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --epoch
 python3 -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --epochs=150 --lr_drop=110 --dataset_file=vcoco --batch_size=2 --backbone=resnet50
 ```
 
-6.Test a [model](https://drive.google.com/drive/folders/1RY_4rrUuFzlTfFp5IVTNauB0-Sd0fphW?usp=sharing).
+7.Test a [model](https://drive.google.com/drive/folders/1RY_4rrUuFzlTfFp5IVTNauB0-Sd0fphW?usp=sharing).
 ```
 python3 test.py --backbone=resnet50 --batch_size=1 --dataset_file=hico --log_dir=./ --model_path=your_model_path
 
+```
+
+
+## Annotations
+We propose a new annotation format 'ODGT' which is much easier to understand, and we have provided annotation files for all the existing benchmarks, i.e. HICO-DET, HOI-A, V-COCO, so just use them. The core structure of ODGT format is:
+```json
+{
+    file_name: XXX.jpg,
+    width: image width,
+    height: image height,
+    gtboxes: [
+        {
+            box: [x, y, w, h],
+            tag: object category name,
+        },
+        ...
+    ],
+    hoi: [
+        {
+            subject_id: human box index in gtboxes,
+            object_id: object_box index in gtboxes,
+            interaction: hoi category name,
+        },
+        ...
+    ],
+}
 ```
 
 
