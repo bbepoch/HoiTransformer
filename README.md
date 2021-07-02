@@ -8,6 +8,17 @@ This method also won 2nd Place Award in HOI Challenge in [Person In Context](htt
 </div>
 
 
+## TODO list
+
+- [x] HICO-DET code
+- [x] V-COCO code
+- [x] HOI-A code
+- [x] HICO-DET [Res50](https://drive.google.com/file/d/1gg8X2IHOkMq15iaAE60yrH28inQadkPO/view?usp=sharing)
+- [ ] V-COCO Res50
+- [ ] HOI-A Res50
+- [ ] Swin-B
+
+
 ## Reproduction
 
 We recomend you to setup in the following steps:
@@ -81,6 +92,7 @@ python3 test.py --backbone=resnet50 --batch_size=1 --dataset_file=hico --log_dir
 
 
 ## Annotations
+
 We propose a new annotation format 'ODGT' which is much easier to understand, and we have provided annotation files for all the existing benchmarks, i.e. HICO-DET, HOI-A, V-COCO, so you don't have to know how to get it, just use it. The core structure of 'ODGT' format is:
 ```
 {
@@ -106,17 +118,8 @@ We propose a new annotation format 'ODGT' which is much easier to understand, an
 ```
 
 
-## TODO list
-- [x] HICO-DET dataset
-- [x] V-COCO dataset
-- [x] HOI-A dataset
-- [x] HICO-DET resnet50 [model](https://drive.google.com/file/d/1gg8X2IHOkMq15iaAE60yrH28inQadkPO/view?usp=sharing)
-- [ ] V-COCO resnet50 model
-- [ ] HOI-A resnet50 model
-- [ ] Swin-B model
-
-
 ## Citation
+
 ```
 @inproceedings{zou2021_hoitrans,
   author = {Zou, Cheng and Wang, Bohan and Hu, Yue and Liu, Junqi and Wu, Qian and Zhao, Yu and Li, Boxun and Zhang, Chenguang and Zhang, Chi and Wei, Yichen and Sun, Jian},
