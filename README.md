@@ -10,13 +10,13 @@ This method also won 2nd Place Award in HOI Challenge in [Person In Context](htt
 
 ## TODO list
 
-- [x] HICO-DET code
-- [x] V-COCO code
-- [x] HOI-A code
+- [x] HICO-DET Code & DataSet
+- [x] V-COCO Code & DataSet
+- [x] HOI-A Code & DataSet
 - [x] HICO-DET [Res50](https://drive.google.com/file/d/1gg8X2IHOkMq15iaAE60yrH28inQadkPO/view?usp=sharing)
 - [ ] V-COCO Res50
 - [ ] HOI-A Res50
-- [ ] Swin-B
+- [ ] Swin-B Code
 
 
 ## Reproduction
