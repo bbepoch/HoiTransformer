@@ -1,7 +1,7 @@
 # HOI Transformer
 Code for CVPR 2021 accepted paper [End-to-End Human Object Interaction Detection with HOI Transformer](https://arxiv.org/abs/2103.04503).
 
-This method also won the 2nd Place Award in HOI Challenge in [Person In Context Challenge](http://www.picdataset.com/challenge/leaderboard/pic2021) in CVPR Workshop 2021.
+This method also won 2nd Place Award in HOI Challenge in [Person In Context](http://www.picdataset.com/challenge/leaderboard/pic2021) in CVPR Workshop 2021.
 
 <div align="center">
   <img src="data/architecture.png" width="900px" />
@@ -27,7 +27,7 @@ cd data/detr_coco && bash download_model.sh
 cd data && bash download_annotations.sh
 ```
 
-4.Download the image files for [HICO-DET](https://drive.google.com/open?id=1QZcJmGVlF9f4h-XLWe9Gkmnmj2z1gSnk), [V-COCO](https://cocodataset.org/#download) and [HOI-A](https://drive.google.com/drive/folders/15xrIt-biSmE9hEJ2W6lWlUmdDmhatjKt). Instead, we provide [a simple way](data/download_images.sh) to get them all at once. The following is the required directory structure.
+4.Download the image files for [HICO-DET](https://drive.google.com/open?id=1QZcJmGVlF9f4h-XLWe9Gkmnmj2z1gSnk), [V-COCO](https://cocodataset.org/#download) and [HOI-A](https://drive.google.com/drive/folders/15xrIt-biSmE9hEJ2W6lWlUmdDmhatjKt). Instead, we provide a [script](data/download_images.sh) to get all of them. A required directory structure is:
 
         HoiTransformer/
         ├── data/
@@ -55,14 +55,14 @@ cd data && bash download_annotations.sh
         ├── main.py
         └── test.py
 
-5.Optional settings. When the above subdirectories in 'data' are all ready, you can train a model on any one of the three benchmarks. But before thar, we highly recommend you to move the whole folder 'data' to another place on your computer, e.g. '/home/hoi/data', and only put a soft link named 'data' under 'HoiTransformer'.
+5.OPTIONAL SETTINGS. When the above subdirectories in 'data' are all ready, you can train a model on any one of the three benchmarks. But before that, we highly recommend you to move the whole folder 'data' to another place on your computer, e.g. '/home/hoi/data', and only put a soft link named 'data' under 'HoiTransformer'.
 ```bash
 # Optional but recommended to separate data from code.
 mv data /home/hoi/
 ln -s /home/hoi/data data
 ```
 
-5.Train a model.
+6.Train a model.
 ```
 # Train on HICO-DET.
 python3 -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --epochs=150 --lr_drop=110 --dataset_file=hico --batch_size=2 --backbone=resnet50
