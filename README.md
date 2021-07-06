@@ -13,10 +13,16 @@ This method also won 2nd Place Award in HOI Challenge in [Person In Context](htt
 - [x] HICO-DET Code & DataSet
 - [x] V-COCO Code & DataSet
 - [x] HOI-A Code & DataSet
-- [x] HICO-DET [Res50](https://drive.google.com/file/d/1gg8X2IHOkMq15iaAE60yrH28inQadkPO/view?usp=sharing)
-- [ ] V-COCO Res50
-- [ ] HOI-A Res50
+- [x] HICO-DET [Res50](https://drive.google.com/file/d/1gg8X2IHOkMq15iaAE60yrH28inQadkPO/view?usp=sharing) Res101
+- [x] V-COCO Res50 [Res101](https://drive.google.com/file/d/1HZH3fUpiou2-f91_OvHnTX6feZNqxHa7/view?usp=sharing)
+- [x] HOI-A [Res50](https://drive.google.com/file/d/1bNrFQ6a8aKBzwWc0MAdG2f24StMP9lhY/view?usp=sharing) Res101
 - [ ] Swin-B Code
+
+
+## Performance
+|Model|HICO-DET (Full/Rare/NonRare)|V-COCO|HOI-A|
+|---|---|---|---|
+|Res50|28.92/19.83/31.64|51.15|73.23|
 
 
 ## Reproduction
@@ -83,9 +89,11 @@ python3 -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --epoch
 
 # Train on V-COCO.
 python3 -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --epochs=150 --lr_drop=110 --dataset_file=vcoco --batch_size=2 --backbone=resnet50
+
+# Training longer can get better performance.
 ```
 
-7.Test a [model](https://drive.google.com/drive/folders/1RY_4rrUuFzlTfFp5IVTNauB0-Sd0fphW?usp=sharing).
+7.Test a model.
 ```
 python3 test.py --backbone=resnet50 --batch_size=1 --dataset_file=hico --log_dir=./ --model_path=your_model_path
 ```
@@ -109,7 +117,7 @@ We propose a new annotation format 'ODGT' which is much easier to understand, an
     hoi: [
         {
             subject_id: human box index in gtboxes,
-            object_id: object_box index in gtboxes,
+            object_id: object box index in gtboxes,
             interaction: hoi category name,
         },
         ...
