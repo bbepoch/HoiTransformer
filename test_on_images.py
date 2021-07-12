@@ -93,7 +93,7 @@ def get_args_parser():
     parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
 
     # Visualization.
-    parser.add_argument('--img_sheet', action='store_true', help='whether to save visualization images')
+    parser.add_argument('--img_sheet', help='File containing image paths.')
     return parser
 
 
@@ -336,11 +336,13 @@ def main():
     args = parser.parse_args()
     print(args)
 
-    img_path_list = [l.strip() for l in open(args.img_sheet, 'r').readlines()]
-    # img_path_list = [
-    #     './data/hico/images/test2015/HICO_test2015_00000001.jpg',
-    #     './data/hoia/images/test/test_000000.png',
-    # ]
+    if args.img_sheet is None:
+        img_path_list = [
+            './data/hico/images/test2015/HICO_test2015_00000001.jpg',
+            './data/hoia/images/test/test_000000.png',
+        ]
+    else:
+        img_path_list = [l.strip() for l in open(args.img_sheet, 'r').readlines()]
 
     run_on_images(args=args, img_path_list=img_path_list)
     print('done')
