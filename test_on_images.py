@@ -148,7 +148,7 @@ def load_model(model_path, args):
     checkpoint = torch.load(model_path, map_location='cpu')
     print('epoch:', checkpoint['epoch'])
     device = torch.device(args.device)
-    model, criterion, post_processors = build_model(args)
+    model, criterion = build_model(args)
     model.load_state_dict(checkpoint['model'])
     model.to(device)
     model.eval()
