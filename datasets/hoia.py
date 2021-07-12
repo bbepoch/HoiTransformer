@@ -11,15 +11,12 @@ import torch
 import numpy as np
 import json
 import cv2
-import nori2 as nori
 import random
 import PIL
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 from util.box_ops import box_xyxy_to_cxcywh
 from PIL import Image
-
-fetcher = nori.Fetcher()
 
 
 coco_classes_originID = {
@@ -160,11 +157,11 @@ def get_hoi_annotation_from_odgt(item, total_boxes, scale):
 
 def parse_one_gt_line(gt_line, scale=1):
     item = json.loads(gt_line)
-    nori_id = item['file_name']
+    img_name = item['file_name']
     img_shape = item['height'], item['width']
     gt_boxes, ignored_boxes, total_boxes = get_det_annotation_from_odgt(item, img_shape, flip=0)
     interaction_boxes = get_hoi_annotation_from_odgt(item, total_boxes, scale)
-    return dict(image_id=nori_id, annotations=interaction_boxes)
+    return dict(image_id=img_name, annotations=interaction_boxes)
 
 
 def hflip(image, target, image_set='train'):

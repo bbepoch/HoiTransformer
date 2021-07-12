@@ -89,9 +89,17 @@ class HungarianMatcher(nn.Module):
         human_cost_giou = -generalized_box_iou(box_cxcywh_to_xyxy(human_out_bbox), box_cxcywh_to_xyxy(human_tgt_box))
         object_cost_giou = -generalized_box_iou(box_cxcywh_to_xyxy(object_out_bbox), box_cxcywh_to_xyxy(object_tgt_box))
 
-        C = self.cost_bbox * (1.5 * human_cost_bbox + 1.5 * object_cost_bbox) \
-            + self.cost_class * (human_cost_class + object_cost_class + 2 * action_cost_class) \
-            + self.cost_giou * (1.5 * human_cost_giou + 1.5 * object_cost_giou)
+        beta_1, beta_2 = 1.3, 1
+        alpha_h, alpha_o, alpha_r = 1, 1, 2
+        l_cls_h = alpha_h * self.cost_class * human_cost_class
+        l_cls_o = alpha_o * self.cost_class * object_cost_class
+        l_cls_r = alpha_r * self.cost_class * action_cost_class
+        l_box_h = self.cost_bbox * human_cost_bbox + self.cost_giou * human_cost_giou
+        l_box_o = self.cost_bbox * object_cost_bbox + self.cost_giou * object_cost_giou
+        l_cls_all = (l_cls_h + l_cls_o + l_cls_r) / (alpha_h + alpha_o + alpha_r)
+        l_box_all = (l_box_h + l_box_o) / 2
+        C = beta_1 * l_cls_all + beta_2 * l_box_all
+
         C = C.view(bs, num_queries, -1).cpu()
 
         sizes = [len(v["human_boxes"]) for v in targets]
