@@ -15,7 +15,7 @@ from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 from typing import Dict, List
 from util.misc import NestedTensor, is_main_process
 
-from mmcv_custom import load_checkpoint
+# from mmcv_custom import load_checkpoint
 
 
 class Mlp(nn.Module):
