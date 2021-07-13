@@ -47,7 +47,7 @@ def get_args_parser():
     parser.add_argument('--clip_max_norm', default=0.1, type=float, help='gradient clipping max norm')
 
     # Backbone.
-    parser.add_argument('--backbone', choices=['resnet50', 'resnet101'], required=True,
+    parser.add_argument('--backbone', choices=['resnet50', 'resnet101', 'swin'], required=True,
                         help="Name of the convolutional backbone to use")
     parser.add_argument('--position_embedding', default='sine', type=str, choices=('sine', 'learned'),
                         help="Type of positional embedding to use on top of the image features")
@@ -109,6 +109,8 @@ def get_args_parser():
     parser.add_argument('--world_size', default=1, type=int,
                         help='number of distributed processes')
     parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
+    parser.add_argument('--swin_model', default='base_cascade',
+                        choices=['base_cascade', 'tiny_cascade', 'tiny_maskrcnn', 'small_cascade', 'small_maskrcnn'])
     return parser
 
 
@@ -160,16 +162,19 @@ def main(args):
     # Load from pretrained DETR model.
     assert args.num_queries == 100, args.num_queries
     assert args.enc_layers == 6 and args.dec_layers == 6
-    assert args.backbone in ['resnet50', 'resnet101'], args.backbone
+    assert args.backbone in ['resnet50', 'resnet101', 'swin'], args.backbone
     if args.backbone == 'resnet50':
         pretrain_model = './data/detr_coco/detr-r50-e632da11.pth'
-    else:
+    elif args.backbone == 'resnet101':
         pretrain_model = './data/detr_coco/detr-r101-2c7b67e5.pth'
-    pretrain_dict = torch.load(pretrain_model, map_location='cpu')['model']
-    my_model_dict = model_without_ddp.state_dict()
-    pretrain_dict = {k: v for k, v in pretrain_dict.items() if k in my_model_dict}
-    my_model_dict.update(pretrain_dict)
-    model_without_ddp.load_state_dict(my_model_dict)
+    else:
+        pretrain_model = None
+    if pretrain_model is not None:
+        pretrain_dict = torch.load(pretrain_model, map_location='cpu')['model']
+        my_model_dict = model_without_ddp.state_dict()
+        pretrain_dict = {k: v for k, v in pretrain_dict.items() if k in my_model_dict}
+        my_model_dict.update(pretrain_dict)
+        model_without_ddp.load_state_dict(my_model_dict)
 
     output_dir = Path(args.output_dir)
     if args.resume:
