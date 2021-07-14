@@ -89,7 +89,7 @@ class HungarianMatcher(nn.Module):
         human_cost_giou = -generalized_box_iou(box_cxcywh_to_xyxy(human_out_bbox), box_cxcywh_to_xyxy(human_tgt_box))
         object_cost_giou = -generalized_box_iou(box_cxcywh_to_xyxy(object_out_bbox), box_cxcywh_to_xyxy(object_tgt_box))
 
-        beta_1, beta_2 = 1.3, 1
+        beta_1, beta_2 = 1.2, 1
         alpha_h, alpha_o, alpha_r = 1, 1, 2
         l_cls_h = alpha_h * self.cost_class * human_cost_class
         l_cls_o = alpha_o * self.cost_class * object_cost_class
