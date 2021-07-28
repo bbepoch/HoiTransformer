@@ -188,7 +188,7 @@ coco_instance_ID_to_name = {
 
 
 hoi_interaction_names = json.loads(
-    open('/data/DATA/VCOCO/vcoco_verb_names.json', 'r').readlines()[0])['verb_names']
+    open('./data/vcoco/vcoco_verb_names.json', 'r').readlines()[0])['verb_names']
 
 
 def convert_xywh2x1y1x2y2(box, shape, flip):
