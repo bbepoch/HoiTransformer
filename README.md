@@ -16,7 +16,7 @@ This method also won 2nd Place Award in HOI Challenge in [Person In Context](htt
 - [x] HICO-DET [Res50](https://drive.google.com/file/d/1-WQnnTHB7f7X2NpqPVqIO6tvWN6k1Ot8/view?usp=sharing) Res101
 - [x] V-COCO Res50 [Res101](https://drive.google.com/file/d/1HZH3fUpiou2-f91_OvHnTX6feZNqxHa7/view?usp=sharing)
 - [x] HOI-A [Res50](https://drive.google.com/file/d/1bNrFQ6a8aKBzwWc0MAdG2f24StMP9lhY/view?usp=sharing) Res101
-- [ ] Swin-B Code
+- [x] Swin-B Code
 
 
 ## Performance
